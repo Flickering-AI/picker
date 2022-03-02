@@ -27,6 +27,7 @@ public class RNCPickerPackage implements ReactPackage {
         List<ViewManager> list = new ArrayList<>();
         list.add(new ReactDialogPickerManager());
         list.add(new ReactDropdownPickerManager());
+        list.add(new ReactIOSStylePickerManager());
       return list;
     }
 }
