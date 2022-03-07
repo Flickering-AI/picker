@@ -19,6 +19,8 @@ def getExtOrIntegerDefault(name) {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "org.jetbrains.kotlin.android.extensions"
 
 android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
@@ -39,5 +41,6 @@ repositories {
 dependencies {
   //noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.ext.kotlinVersion}"
 }
   
