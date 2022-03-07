@@ -55,7 +55,7 @@ class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
             if (item.hasKey("style") && !item.isNull("style")) {
                 val style: ReadableMap = item.getMap("style")!!
                 if (style.hasKey("color") && !style.isNull("color")) {
-                    val centerColor = Color.parseColor(style.getString("color"))
+                    val centerColor = style.getInt("color")
                     view.setTextColorCenter(centerColor)
                     view.setTextColorOut(centerColor)
                 }
