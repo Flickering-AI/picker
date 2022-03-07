@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import AndroidDialogPickerNativeComponent from './AndroidDialogPickerNativeComponent';
 import AndroidDropdownPickerNativeComponent from './AndroidDropdownPickerNativeComponent';
+import AndroidIOSStylePickerNativeComponent from './AndroidIOSStylePickerNativeComponent';
 
 const MODE_DROPDOWN = 'dropdown';
 
@@ -29,7 +30,7 @@ type PickerAndroidProps = $ReadOnly<{|
   style?: ?TextStyleProp,
   selectedValue?: ?(number | string),
   enabled?: ?boolean,
-  mode?: ?('dialog' | 'dropdown'),
+  mode?: ?('dialog' | 'dropdown' | 'ios-style'),
   onBlur?: (e: NativeSyntheticEvent<undefined>) => mixed,
   onFocus?: (e: NativeSyntheticEvent<undefined>) => mixed,
   onValueChange?: ?(itemValue: ?(string | number), itemIndex: number) => mixed,
@@ -42,6 +43,7 @@ type PickerAndroidProps = $ReadOnly<{|
 type PickerRef = React.ElementRef<
   | typeof AndroidDialogPickerNativeComponent
   | typeof AndroidDropdownPickerNativeComponent,
+  | typeof AndroidIOSStylePickerNativeComponent,
 >;
 
 /**
@@ -50,12 +52,15 @@ type PickerRef = React.ElementRef<
 function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
   const pickerRef = React.useRef(null);
 
+  let componentName = "RNCIOSStylePicker";
+  if (props.mode === MODE_DROPDOWN) {
+    componentName = 'RNCAndroidDialogPicker';
+  } else if (props.mode === 'ios-style') {
+    componentName = 'RNCAndroidDropdownPicker';
+  }
+
   React.useImperativeHandle(ref, () => {
-    const viewManagerConfig = UIManager.getViewManagerConfig(
-      props.mode === MODE_DROPDOWN
-        ? 'RNCAndroidDialogPicker'
-        : 'RNCAndroidDropdownPicker',
-    );
+    const viewManagerConfig = UIManager.getViewManagerConfig(componentName);
     return {
       blur: () => {
         if (!viewManagerConfig.Commands) {
@@ -98,16 +103,20 @@ function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
 
       const processedColor = processColor(color);
 
+      const mergedStyle = {
+        ...style,
+        ...props.itemStyle,
+      };
       return {
         color: color == null ? null : processedColor,
         contentDescription,
         label,
         enabled,
         style: {
-          ...style,
-          color: style.color ? processColor(style.color) : null,
-          backgroundColor: style.backgroundColor
-            ? processColor(style.backgroundColor)
+          ...mergedStyle,
+          color: mergedStyle.color ? processColor(mergedStyle.color) : null,
+          backgroundColor: mergedStyle.color
+            ? processColor(mergedStyle.backgroundColor)
             : null,
         },
       };
@@ -153,7 +162,9 @@ function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
   const Picker =
     props.mode === MODE_DROPDOWN
       ? AndroidDropdownPickerNativeComponent
-      : AndroidDialogPickerNativeComponent;
+      : (props.mode === 'dialog'
+          ? AndroidDialogPickerNativeComponent
+          : AndroidIOSStylePickerNativeComponent);
 
   const rootProps = {
     accessibilityLabel: props.accessibilityLabel,
