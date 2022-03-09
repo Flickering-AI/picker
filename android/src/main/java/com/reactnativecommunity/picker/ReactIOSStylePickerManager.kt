@@ -1,9 +1,9 @@
 package com.reactnativecommunity.picker
 
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
-import com.contrarywind.adapter.WheelAdapter
-import com.contrarywind.view.WheelView
+import android.util.TypedValue
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
@@ -11,6 +11,9 @@ import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.github.gzuliyujiang.wheelview.contract.OnWheelChangedListener
+import com.github.gzuliyujiang.wheelview.widget.WheelView
+
 
 @ReactModule(name = ReactIOSStylePickerManager.REACT_CLASS)
 class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
@@ -23,10 +26,24 @@ class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
 
     override fun addEventEmitters(reactContext: ThemedReactContext, view: WheelView) {
         super.addEventEmitters(reactContext, view)
-        view.setOnItemSelectedListener {
-            reactContext.getNativeModule(UIManagerModule::class.java)!!.eventDispatcher.dispatchEvent(PickerItemSelectEvent(
-                    view.id, it))
-        }
+        view.setOnWheelChangedListener(object: OnWheelChangedListener {
+            override fun onWheelScrolled(view: WheelView?, offset: Int) {
+            }
+
+            override fun onWheelSelected(view: WheelView?, position: Int) {
+                if (view != null) {
+                    reactContext.getNativeModule(UIManagerModule::class.java)!!.eventDispatcher.dispatchEvent(PickerItemSelectEvent(
+                        view.id, position))
+                }
+            }
+
+            override fun onWheelScrollStateChanged(view: WheelView?, state: Int) {
+            }
+
+            override fun onWheelLoopFinished(view: WheelView?) {
+            }
+
+        })
     }
 
     override fun createViewInstance(reactContext: ThemedReactContext): WheelView {
@@ -43,29 +60,42 @@ class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
 
     @ReactProp(name = "selected")
     fun setSelected(view: WheelView, selected: Int) {
-        view.currentItem = selected
+        view.setDefaultPosition(selected)
     }
 
     @ReactProp(name = "items")
     fun setItems(view: WheelView, items: ReadableArray?) {
         if (items != null) {
-            view.setCyclic(false)
+            view.isCyclicEnabled = false
+            view.curvedMaxAngle = 15
+            view.isCurvedEnabled = true
+            view.isCurtainEnabled = false
+            view.isIndicatorEnabled = false
+            view.isAtmosphericEnabled = true
+            view.selectedTextBold = false;
+
 
             val item: ReadableMap = items.getMap(0)
             if (item.hasKey("style") && !item.isNull("style")) {
                 val style: ReadableMap = item.getMap("style")!!
                 if (style.hasKey("color") && !style.isNull("color")) {
                     val centerColor = style.getInt("color")
-                    view.setTextColorCenter(centerColor)
-                    view.setTextColorOut(centerColor)
+                    view.selectedTextColor = centerColor
                 }
                 if (style.hasKey("fontFamily") && !style.isNull("fontFamily")) {
                     val face = Typeface.createFromAsset(view.context.assets,
                             "fonts/" + style.getString("fontFamily") + ".ttf")
-                    view.setTypeface(face)
+                    view.typeface = face
                 }
                 if (style.hasKey("fontSize") && !style.isNull("fontSize")) {
-                    view.setTextSize(style.getDouble("fontSize").toFloat())
+                    val dip = style.getDouble("fontSize").toFloat()
+                    val px = TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        dip,
+                        view.resources.displayMetrics
+                    )
+                    view.textSize = px
+                    view.selectedTextSize = px
                 }
                 if (style.hasKey("backgroundColor") && !style.isNull("backgroundColor")) {
                     view.setBackgroundColor(style.getInt("backgroundColor"))
@@ -73,20 +103,9 @@ class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
                     view.setBackgroundColor(Color.TRANSPARENT)
                 }
             }
-            view.adapter = ReactIOSStylePickerAdapter(items.toArrayList().map { (it as HashMap<*, *>)["label"] })
+            view.data = items.toArrayList().map { (it as HashMap<*, *>)["label"] }
         }
     }
 
-
-}
-
-class ReactIOSStylePickerAdapter<T>(private val dataItems: List<T>) : WheelAdapter<T> {
-
-
-    override fun getItemsCount(): Int = this.dataItems.count()
-
-    override fun getItem(index: Int): T = this.dataItems[index]
-
-    override fun indexOf(o: T): Int = this.dataItems.indexOf(o)
 
 }
