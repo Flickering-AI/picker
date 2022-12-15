@@ -60,7 +60,7 @@ class ReactIOSStylePickerManager : SimpleViewManager<WheelView>() {
 
     @ReactProp(name = "selected")
     fun setSelected(view: WheelView, selected: Int) {
-        view.setDefaultPosition(selected)
+        view.scrollTo(selected)
     }
 
     @ReactProp(name = "items")
