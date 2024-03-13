@@ -98,6 +98,13 @@ numberOfRowsInComponent:(__unused NSInteger)component
           forComponent:(NSInteger)component
            reusingView:(UIView *)view
 {
+  pickerView.subviews[1].backgroundColor = [UIColor clearColor];
+  if (@available(iOS 14, *)) {
+  }else{
+      if(pickerView.subviews[2]){
+          pickerView.subviews[2].backgroundColor = [UIColor clearColor];
+      }
+  }
   if (!view) {
       CGFloat rowHeight = [pickerView rowSizeForComponent:component].height;
       CGFloat rowWidth = [pickerView rowSizeForComponent:component].width;

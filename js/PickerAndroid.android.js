@@ -23,6 +23,7 @@ import AndroidDialogPickerNativeComponent, {
 import AndroidDropdownPickerNativeComponent, {
   Commands as AndroidDropdownPickerCommands,
 } from './AndroidDropdownPickerNativeComponent';
+import AndroidIOSStylePickerNativeComponent from './AndroidIOSStylePickerNativeComponent';
 
 import type {TextStyleProp} from 'StyleSheet';
 
@@ -33,7 +34,7 @@ type PickerAndroidProps = $ReadOnly<{|
   style?: ?TextStyleProp,
   selectedValue?: ?(number | string),
   enabled?: ?boolean,
-  mode?: ?('dialog' | 'dropdown'),
+  mode?: ?('dialog' | 'dropdown' | 'ios-style'),
   onBlur?: (e: NativeSyntheticEvent<undefined>) => mixed,
   onFocus?: (e: NativeSyntheticEvent<undefined>) => mixed,
   onValueChange?: ?(itemValue: ?(string | number), itemIndex: number) => mixed,
@@ -46,6 +47,7 @@ type PickerAndroidProps = $ReadOnly<{|
 type PickerRef = React.ElementRef<
   | typeof AndroidDialogPickerNativeComponent
   | typeof AndroidDropdownPickerNativeComponent,
+  | typeof AndroidIOSStylePickerNativeComponent,
 >;
 
 /**
@@ -53,6 +55,13 @@ type PickerRef = React.ElementRef<
  */
 function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
   const pickerRef = React.useRef(null);
+
+  let componentName = "RNCIOSStylePicker";
+  if (props.mode === MODE_DROPDOWN) {
+    componentName = 'RNCAndroidDialogPicker';
+  } else if (props.mode === 'ios-style') {
+    componentName = 'RNCAndroidDropdownPicker';
+  }
   const FABRIC_ENABLED = !!global?.nativeFabricUIManager;
 
   const [nativeSelectedIndex, setNativeSelectedIndex] = React.useState({
@@ -60,11 +69,7 @@ function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
   });
 
   React.useImperativeHandle(ref, () => {
-    const viewManagerConfig = UIManager.getViewManagerConfig(
-      props.mode === MODE_DROPDOWN
-        ? 'RNCAndroidDialogPicker'
-        : 'RNCAndroidDropdownPicker',
-    );
+    const viewManagerConfig = UIManager.getViewManagerConfig(componentName);
     return {
       blur: () => {
         if (!viewManagerConfig.Commands) {
@@ -169,20 +174,24 @@ function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
 
       const processedColor = processColor(color);
 
+      const mergedStyle = {
+        ...style,
+        ...props.itemStyle,
+      };
       return {
         color: color == null ? null : processedColor,
         contentDescription,
         label: String(label),
         enabled,
         style: {
-          ...style,
+          ...mergedStyle,
           // there seems to be a problem with codegen, where it would assign to an item
           // the last defined value of the font size if not set explicitly
           // 0 is handled on the native side as "not set"
           fontSize: style.fontSize ?? 0,
-          color: style.color ? processColor(style.color) : null,
-          backgroundColor: style.backgroundColor
-            ? processColor(style.backgroundColor)
+          color: mergedStyle.color ? processColor(mergedStyle.color) : null,
+          backgroundColor: mergedStyle.color
+            ? processColor(mergedStyle.backgroundColor)
             : null,
         },
       };
@@ -214,7 +223,9 @@ function PickerAndroid(props: PickerAndroidProps, ref: PickerRef): React.Node {
   const Picker =
     props.mode === MODE_DROPDOWN
       ? AndroidDropdownPickerNativeComponent
-      : AndroidDialogPickerNativeComponent;
+      : (props.mode === 'dialog'
+          ? AndroidDialogPickerNativeComponent
+          : AndroidIOSStylePickerNativeComponent);
 
   const rootProps = {
     accessibilityLabel: props.accessibilityLabel,

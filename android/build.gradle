@@ -68,6 +68,7 @@ def isNewArchitectureEnabled() {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: "org.jetbrains.kotlin.android"
 
 if (isNewArchitectureEnabled()) {
     apply plugin: "com.facebook.react"
@@ -118,4 +119,5 @@ dependencies {
     } else {
         implementation 'com.facebook.react:react-native:+'
     }
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.ext.kotlinVersion}"
 }

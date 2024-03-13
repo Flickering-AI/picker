@@ -24,6 +24,7 @@ import type {Node} from 'react';
 
 const MODE_DIALOG = 'dialog';
 const MODE_DROPDOWN = 'dropdown';
+const MODE_IOS = 'ios-style';
 
 type PickerItemProps = $ReadOnly<{|
   /**
@@ -90,7 +91,7 @@ type PickerProps = $ReadOnly<{|
    *
    * @platform android
    */
-  mode?: ?('dialog' | 'dropdown'),
+  mode?: ?('dialog' | 'dropdown' | 'ios-style'),
 
   /**
    * Style to apply to each of the item labels.
@@ -153,7 +154,7 @@ class Picker extends React.Component<PickerProps> {
   static Item: typeof PickerItem = PickerItem;
 
   static defaultProps: PickerProps = {
-    mode: MODE_DIALOG,
+    mode: MODE_IOS,
   };
 
   blur: () => void = () => {
